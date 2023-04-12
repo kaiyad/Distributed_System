@@ -36,10 +36,6 @@ class FileLock(Lock):
     def machine_id(self):
         return self.host_id
 
-    def set_machine_id(self, id=None):
-        if id is not None:
-            self.host_id = id
-
     def acquire(self):
         if self.is_locked():
             return False
@@ -53,22 +49,27 @@ class FileLock(Lock):
         except FileExistsError:
             return False
 
-    def release(self, force=False):
-        try:
-            with open(self.lock_path, 'r') as lock_file:
-                _lock_data = json.load(lock_file)
-            if _lock_data['owner'] == self.machine_id or force:
-                os.remove(self.lock_path)
-                return True
-        except FileNotFoundError:
-                return False
-    
     def is_locked(self):
         if os.path.exists(self.lock_path):
             return True
 
-    def who_locked(self):
-        return super().who_locked()
+    def release(self, force=False):
+        try:
+            if self.who_locked() == self.machine_id or force:
+                os.remove(self.lock_path)
+                return True
+        except FileNotFoundError:
+            return False
 
+    def set_machine_id(self, id=None):
+        if id is not None:
+            self.host_id = id
+
+    def who_locked(self):
+        if not self.is_locked():
+            return None
+        with open(self.lock_path, 'r') as lock_file:
+            lock_data = json.load(lock_file)
+            return lock_data['owner']
 
         

@@ -25,8 +25,7 @@ def describe_file_lock():
         assert system_1.is_locked()
         assert system_1.release()
         assert not system_1.is_locked()
-        assert not system_2.is_locked()
-        
+        assert not system_2.is_locked()     
 
     def test_lock(clean_up):
         system_1 = FileLock(LOCK_PATH)
@@ -66,6 +65,15 @@ def describe_file_lock():
         file_lock.set_machine_id(id)
         assert id == file_lock.machine_id
 
+    def test_who_locked(clean_up):
+        system_1 = FileLock(LOCK_PATH)
+        system_1.set_machine_id(randint(9, 99))
+        system_2 = FileLock(LOCK_PATH)
+        system_2.set_machine_id(randint(100, 999))
+
+        system_1.acquire()
+        assert system_1.machine_id == system_1.who_locked()
+        assert system_1.machine_id == system_2.who_locked()
 
 
 

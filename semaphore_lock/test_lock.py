@@ -74,6 +74,7 @@ def describe_file_lock():
         system_1.acquire()
         assert system_1.machine_id == system_1.who_locked()
         assert system_1.machine_id == system_2.who_locked()
+        assert system_1.release()
 
 
 

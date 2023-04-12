@@ -41,8 +41,9 @@ class FileLock(Lock):
             self.host_id = id
 
     def acquire(self):
-        if os.path.exists(self.lock_path):
+        if self.is_locked():
             return False
+
         try:
             with open(self.lock_path, 'w') as lock_file:
                 self.lock_data['owner'] = self.machine_id
@@ -63,8 +64,9 @@ class FileLock(Lock):
                 return False
     
     def is_locked(self):
-        return super().is_locked()
-    
+        if os.path.exists(self.lock_path):
+            return True
+
     def who_locked(self):
         return super().who_locked()
 

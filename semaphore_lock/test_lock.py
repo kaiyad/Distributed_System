@@ -4,26 +4,51 @@ import pytest
 
 from random import randint
 
-from semaphore_lock.lock import FileLock
+from .lock import FileLock
+
+LOCK_PATH = "./._tmp_.lock"
+
+@pytest.fixture
+def clean_up():
+    if os.path.exists(LOCK_PATH):
+        os.remove(LOCK_PATH)
 
 def describe_file_lock():
-    def test_lock_acquire_release():
-        lock_path = "./._tmp_.lock"
-        if os.path.exists(lock_path):
-            os.remove(lock_path)
-        file_lock = FileLock(lock_path)
+    def test_lock_acquire_release(clean_up):
+        file_lock = FileLock(LOCK_PATH)
         assert file_lock.acquire()
         assert not file_lock.acquire()
         assert file_lock.release()
         assert not file_lock.release()
 
-    def test_host_id():
-        lock_path = "./._tmp_.lock"
-        file_lock = FileLock(lock_path)
+    def test_host_id(clean_up):
+        file_lock = FileLock(LOCK_PATH)
         id = randint(9, 99999)
         file_lock.set_machine_id(id)
         assert id == file_lock.machine_id
 
+    def test_distributed_lock(clean_up):
+        system_1 = FileLock(LOCK_PATH)
+        system_1.set_machine_id(randint(9,99))
+        system_2 = FileLock(LOCK_PATH)
+        system_2.set_machine_id(randint(199,299))
+        system_3 = FileLock(LOCK_PATH)
+        system_3.set_machine_id(randint(399,499))
+        assert system_1.acquire()
+        assert not system_2.acquire()
+        assert not system_3.acquire()
+
+        assert not system_2.release()
+        assert not system_3.release()
+        assert system_1.release()
+
+        assert not system_2.release()
+        assert not system_3.release()
+
+
+
+
+        
     
 
 
